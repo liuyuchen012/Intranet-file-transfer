@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang=zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'css\bootstrap.min.css') }}">
+    <title>上传文件</title>
+    <link rel="icon" href="{{ url_for('static', filename = 'img/logo.png') }}" type="image/x-icon">
+</head>
+<body>
+<div class="container mt-">
+    <h1 class="text-center">上传文件</h1>
+    <form method="post" enctype="multipart/form-data" class="mt-4">
+        <div class="form-group">
+            <input type="file" name="file" class="form-control-file">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">上传</button>
+    </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang=zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'css\bootstrap.min.css') }}">
+    <title>成功上传文件</title>
+    <link rel="icon" href="{{ url_for('static', filename = 'img/logo.png') }}" type="image/x-icon">
+</head>
+<body>
+<div class=" mt-5">
+ <h1 class="-center">文件上传成功</h1>
+    <p class="text-center">点击此可从服务器下载/查看文件: <a href="/files/{{ filename }}">{{ filename }}</a></p>
+    <div class="text-center">
+        <img src="/files/{{ filename }}" alt="QR Code" class="img-fluid"/>
+    </div>
+    <div class="text-center mt-4">
+        <a href="/" class="btn btn-secondary">上传更多文件</a>
+    </div>
+</div>
+</body>
+</html>
