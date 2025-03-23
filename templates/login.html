@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0 text-center">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>系统登录
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    <!-- 错误消息显示 -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- 登录表单 -->
+                    <form method="POST" action="{{ url_for('login', next=request.args.get('next')) }}">
+                        {{ form.hidden_tag() }}
+
+                        <!-- 用户名输入 -->
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="bi bi-person-fill me-1"></i>用户名
+                            </label>
+                            {{ form.username(class="form-control", placeholder="请输入管理员账号") }}
+                        </div>
+
+                        <!-- 密码输入 -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="bi bi-lock-fill me-1"></i>密码
+                            </label>
+                            {{ form.password(class="form-control", placeholder="请输入密码") }}
+                        </div>
+
+                        <!-- 提交按钮 -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>立即登录
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 辅助链接 -->
+                <div class="card-footer text-muted text-center">
+                    <small>
+                        <a href="{{ url_for('index') }}" class="text-decoration-none">
+                            <i class="bi bi-house-door me-1"></i>返回首页
+                        </a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 动态效果增强 -->
+<style>
+    .card {
+        border-radius: 1rem;
+    }
+    .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .alert {
+        border-radius: 0.75rem;
+    }
+</style>
+{% endblock %}
