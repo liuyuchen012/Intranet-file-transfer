@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <!-- 用户面板 -->
+    {% if current_user %}
+    <div class="user-panel d-flex justify-content-end mb-4">
+        <div class="btn-group">
+            <span class="btn btn-outline-primary disabled">
+                <i class="bi bi-person-circle"></i> {{ current_user.username }}
+            </span>
+            <form action="/logout" method="POST" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">注销</button>
+
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="user-panel d-flex justify-content-end mb-4">
+        <a href="/login" class="btn btn-outline-primary">
+            <i class="bi bi-box-arrow-in-right"></i> 登录
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- 上传区域 -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-cloud-upload"></i> 文件上传</h5>
+        </div>
+        <div class="card-body">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="input-group">
+                    <input type="file" class="form-control" name="file" required>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-upload"></i> 上传文件
+                    </button>
+                </div>
+                <small class="text-muted mt-2 d-block">
+                    <!-- templates/index.html -->
+                        允许的文件类型：{{ allowed_extensions }}（最大 {{ max_file_size }} MB）
+                </small>
+            </form>
+        </div>
+    </div>
+
+    <!-- 文件列表 -->
+    <div class="card shadow">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-files"></i> 文件列表</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>文件名</th>
+                            <th>大小</th>
+                            <th>上传时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in files %}
+                        <tr>
+                            <td class="align-middle">
+                                <i class="bi bi-file-earmark me-2"></i>{{ file.name }}
+                            </td>
+                            <td class="align-middle">
+                                {{ (file.size / 1024 / 1024)|round(2) }} MB
+                            </td>
+                            <td class="align-middle">
+                                {{ file.ctime.strftime('%Y-%m-%d %H:%M') }}
+                            </td>
+                            <td class="align-middle">
+                                <div class="btn-group">
+                                    <a href="/download/{{ file.name }}"
+                                       class="btn btn-sm btn-outline-success"
+                                       {% if not current_user %}disabled{% endif %}>
+                                        <i class="bi bi-download">下载</i>
+                                    </a>
+                                    {% if current_user and current_user.is_admin %}
+                                    <button class="btn btn-sm btn-outline-danger delete-btn"
+                                            data-filename="{{ file.name }}">
+                                        <i class="bi bi-trash">删除</i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">
+                                <i class="bi bi-folder-x me-2"></i>暂无上传文件
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 上传结果模态框 -->
+<div class="modal fade" id="uploadResult" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-check-circle"></i> 上传成功</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <img id="qrCodeImg" class="img-fluid" style="max-width: 200px;">
+                </div>
+                <div class="input-group mb-3">
+                    <input type="text" id="downloadUrl"
+                           class="form-control" readonly>
+                    <button class="btn btn-outline-secondary"
+                            onclick="copyUrl()">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                </div>
+                <small class="text-muted">二维码24小时内有效</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 脚本部分 -->
+<script>
+// 文件上传处理
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+    const fileInput = document.querySelector('input[type=file]');
+    formData.append('file', fileInput.files[0]);
+
+    try {
+        const response = await fetch('/upload', { method: 'POST', body: formData });
+        const result = await response.json();
+
+        if (result.success) {
+            // 更新二维码和下载链接
+            document.getElementById('qrCodeImg').src = result.qr_code;
+            document.getElementById('downloadUrl').value = result.download_url;
+
+            // 显示模态框
+            new bootstrap.Modal('#uploadResult').show();
+
+            // 2秒后刷新列表
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            alert(`上传失败：${result.error}`);
+        }
+    } catch (error) {
+        alert('网络错误，请稍后重试');
+    }
+});
+
+// 文件删除处理
+document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const filename = btn.dataset.filename;
+        if (confirm(`确定要永久删除 ${filename} 吗？`)) {
+            try {
+                const response = await fetch(`/delete/${filename}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    btn.closest('tr').remove();
+                } else {
+                    alert('删除失败');
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+            }
+        }
+    });
+});
+
+// 复制下载链接
+function copyUrl() {
+    const input = document.getElementById('downloadUrl');
+    input.select();
+    navigator.clipboard.writeText(input.value);
+    alert('链接已复制到剪贴板');
+}
+</script>
+
+<!-- 样式增强 -->
+<style>
+.user-panel .btn-group { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.table-hover tbody tr:hover { background-color: #f8f9fa; }
+.delete-btn:hover { transform: scale(1.1); transition: transform 0.2s; }
+.bi { vertical-align: -0.125em; }
+</style>
+{% endblock %}

@@ -1,0 +1,58 @@
+<!-- templates/admin_users.html -->
+{% extends "admin.html" %}
+
+{% block content %}
+<div class="admin-panel">
+    <h3>用户管理</h3>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5>新建用户</h5>
+            <form method="post">
+                {{ form.hidden_tag() }}
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        {{ form.username(class="form-control", placeholder="用户名") }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.password(class="form-control", placeholder="密码") }}
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-check">
+                            {{ form.is_admin(class="form-check-input") }}
+                            <label class="form-check-label">管理员</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        {{ form.submit(class="btn btn-primary w-100") }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <h5>现有用户</h5>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>用户名</th>
+                <th>权限</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ '管理员' if user.is_admin else '普通用户' }}</td>
+                <td>
+                    {% if not user.is_admin %}
+                    <button class="btn btn-sm btn-danger">删除</button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
